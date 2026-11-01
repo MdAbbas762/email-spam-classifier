@@ -1,361 +1,318 @@
-# 📧 Email Spam Classifier — Reproducible NLP & Machine Learning
+# 📧 MailScope — Email Spam Classification & ML Evaluation
 
-A **Python-based email spam detection system** that classifies message text as **Spam** or **Not Spam** using natural language processing, TF-IDF features, and supervised machine learning. Beyond predicting a label, this project provides a **leakage-safe experiment**, comparative model evaluation, reproducible reports, interpretable features, a prediction CLI, and an interactive local Streamlit dashboard.
+**MailScope** is an interactive email classification and machine learning evaluation system built with **Python, scikit-learn, NLP, and Streamlit**. It transforms raw email text into numerical features, compares supervised classifiers, and identifies spam through a trained prediction pipeline. A dedicated dashboard brings together **live message analysis, decision explanations, held-out evaluation, model comparison, and batch CSV classification**.
 
 **Python · scikit-learn · NLTK · Pandas · NumPy · Streamlit · Matplotlib · Pytest**
 
-> **Project scope:** A reproducible text-classification and model-evaluation system with a local demonstration interface. It is **not** connected to a live inbox and does **not** provide phishing protection.
-
 ---
 
-## Application Screenshots
+## 📌 Project Overview
 
-**Live classification and feature explanations**
+MailScope connects the full text-classification workflow—from preparing labeled email data to training, evaluating, saving, and using an ML model—within one reproducible project.
 
-![Live spam prediction](screenshots/01-spam-prediction.png)
+Its training system cleans and validates email records, converts text into TF-IDF features, compares candidate classifiers through stratified cross-validation, and selects the strongest model based on spam-class F1-score. The selected pipeline is then evaluated on a reserved test partition and saved for reuse.
 
-![Term contributions](screenshots/02-feature-explanation.png)
+The **MailScope web application** makes the trained model accessible through a polished interface. Users can classify individual emails, inspect influential terms, evaluate the model against held-out data, compare training experiments, and process entire CSV files.
 
-**Measured model evaluation**
+## 🎯 Project Objectives
 
-![Holdout metrics](screenshots/03-evaluation-metrics.png)
-
-![Confusion matrix](screenshots/04-confusion-matrix.png)
-
-**Model selection and batch inference**
-
-![Three-model cross-validation comparison](screenshots/06-model-comparison.png)
-
-![Batch prediction results](screenshots/08-batch-classification-results.png)
-
-<details>
-<summary>Additional evaluation and interface screenshots</summary>
-
-![Precision-recall and ROC curves](screenshots/05-classification-curves.png)
-
-![Batch upload interface](screenshots/07-batch-classification-interface.png)
-
-![Model feature insights](screenshots/09-model-insights.png)
-
-</details>
-
-## 📌 Overview
-
-Filtering unwanted email is a binary text-classification problem, but a working prediction is only one part of a trustworthy ML system. The more important questions are whether the evaluation uses unseen data, whether the chosen model performs consistently, and which kinds of mistakes it makes.
-
-This project processes labeled email messages, trains and compares multiple classifiers, selects the best-performing model through **training-only stratified cross-validation**, and evaluates that model once on a previously unseen holdout set. It also exports the full fitted preprocessing-and-classification pipeline for subsequent predictions.
-
-### 🎯 Objectives
-
-- Convert raw email text into consistent numerical features for supervised classification.
-- Prevent leakage from the held-out test data into feature fitting and model selection.
-- Compare multiple algorithms using more than a single accuracy score.
-- Make false positives, false negatives, and important model features inspectable.
-- Reproduce results and run predictions with simple Python commands.
+- Build a complete NLP-based email classification pipeline with reusable training and inference components.
+- Compare multiple supervised learning algorithms using consistent validation procedures.
+- Keep model selection and feature fitting separate from held-out test evaluation.
+- Provide clear classification results, measurable performance reports, and interpretable model decisions.
+- Support both individual predictions and batch processing through a browser-based interface and CLI.
 
 ## ✨ Key Features
 
-| Capability | Implementation |
-|---|---|
-| **Data quality checks** | Validates text and binary labels; removes empty and exact-duplicate messages before splitting |
-| **NLP preprocessing** | Lowercasing, tokenization, stopword removal, and Porter stemming |
-| **Text features** | TF-IDF unigrams/bigrams fitted inside each training fold |
-| **Leakage prevention** | End-to-end scikit-learn `Pipeline` and an untouched held-out test set |
-| **Model comparison** | Multinomial Naive Bayes, Bernoulli Naive Bayes, and class-balanced Logistic Regression |
-| **Cross-validation** | Three-fold stratified CV on training data, with fixed random seed |
-| **Evaluation** | Accuracy, spam precision/recall/F1, average precision, ROC-AUC, and confusion matrix |
-| **Diagnostic reports** | Precision–recall / ROC plots, misclassification row IDs, and weighted text features |
-| **Interactive web dashboard** | Local Streamlit UI for text prediction, scores, model diagnostics, and evaluation charts |
-| **Batch classification** | Upload a CSV of messages, preview labels/scores, and export predictions |
-| **Prediction transparency** | Per-message TF-IDF × model-coefficient contributions for the selected linear classifier |
-| **Prediction CLI** | Interactive CLI, single-message command, and JSON output |
-| **Software reliability** | Automated Pytest checks and GitHub Actions CI |
+### 🤖 Intelligent Email Classification
 
-## 🏗️ Architecture & Experiment Workflow
+Enter an email message into the MailScope dashboard to receive a **Spam** or **Not Spam** prediction. The application uses the fitted scikit-learn pipeline to preprocess the text, construct TF-IDF features, and return the selected classifier's output and spam-class score.
+
+### 🔎 Explainable Predictions
+
+For the selected Logistic Regression model, MailScope identifies terms from the submitted message that contribute to its classification. A decision-inspection table shows each term, whether it pushes the result toward spam or legitimate mail, and its relative contribution.
+
+### 🧹 Automated Data Preparation
+
+The data pipeline validates email texts and labels, removes unusable entries and duplicate messages, and applies lowercase normalization, tokenization, stopword filtering, and Porter stemming before feature extraction.
+
+### 🧪 Comparative Model Training
+
+MailScope trains and compares **Multinomial Naive Bayes, Bernoulli Naive Bayes, and Logistic Regression** through three-fold stratified cross-validation. TF-IDF feature fitting occurs within the training pipeline for each fold. The winning model is selected by mean spam F1-score and then fitted on the complete training partition.
+
+### 📊 Interactive Performance Evaluation
+
+The dashboard can rerun the saved model on its held-out test partition and calculate accuracy, spam precision, recall, F1-score, confusion matrix, precision–recall curve, and ROC curve. It also displays the saved cross-validation comparison from training.
+
+### 📁 Batch Email Analysis
+
+Upload a CSV containing a `text` column to classify up to **500 messages** in one operation. Review the predicted labels and model scores, inspect the spam/legitimate breakdown, and download the results as a CSV file.
+
+### ⚙️ Reusable ML Engineering Workflow
+
+Training, inference, evaluation, and dashboard functionality are organized into separate Python modules. The trained pipeline, experiment metrics, reports, and visualizations can be regenerated, while automated Pytest checks and GitHub Actions verify the core code paths.
+
+## 🏗️ System Architecture
 
 ```text
-Labeled email dataset (emails.csv)
-              │
-              ▼
-       Validate / Clean
-       Deduplicate Text
-              │
-              ▼
-    Stratified 80/20 Split
-              │
-     ┌────────┴────────────────┐
-     ▼                         ▼
-TRAIN (4,556)             TEST (1,139)
-     │                         │
-     ▼                         │  Kept untouched during
-3-Fold Stratified CV           │  feature fitting and
-     │                         │  model selection
-     ▼                         │
-TF-IDF fitted per CV fold      │
-     │                         │
-     ├── Multinomial NB        │
-     ├── Bernoulli NB          │
-     └── Logistic Regression   │
-     │                         │
-     ▼                         │
-Select by mean spam F1         │
-     │                         │
-     ▼                         │
-Refit full pipeline on TRAIN   │
-     └────────────┬────────────┘
-                  ▼
-        One Holdout Evaluation
-                  │
-                  ▼
-       Metrics + Error Analysis
-          + Plots + Model Card
-                  │
-                  ▼
-        Saved Pipeline → CLI / Streamlit UI
+                         Labeled Email Dataset
+                                 │
+                                 ▼
+                    Validation & Deduplication
+                                 │
+                                 ▼
+                    Stratified Train/Test Split
+                          │             │
+                          ▼             │
+                    Training Data       │ Held-Out Test Data
+                          │             │
+                          ▼             │
+               3-Fold Cross-Validation  │
+                          │             │
+                   TF-IDF Pipelines     │
+                          │             │
+              ┌───────────┼──────────┐  │
+              ▼           ▼          ▼  │
+         Multinomial   Bernoulli  Logistic
+         Naive Bayes   Naive Bayes Regression
+              └───────────┼──────────┘  │
+                          ▼             │
+                   Model Selection      │
+                          │             │
+                          ▼             ▼
+                   Final Model → Holdout Evaluation
+                          │             │
+                          ▼             ▼
+                  Saved ML Pipeline   Metrics & Reports
+                          │             │
+                          └──────┬──────┘
+                                 ▼
+                           MailScope UI
+                   ┌─────────────┼──────────────┐
+                   ▼             ▼              ▼
+             Live Analysis  Model Evaluation  Batch Processing
 ```
 
-**Why the design matters:** The original notebook fitted TF-IDF on the entire dataset before splitting, allowing holdout-document information to affect vocabulary and IDF statistics. The revised training path fixes this by fitting TF-IDF *inside* the cross-validated scikit-learn pipeline, and only on training data for the final model.
+### How predictions work
 
-## 🔍 Dataset & Preprocessing
+1. **Input:** A message is submitted through the dashboard, CLI, or batch upload.
+2. **Preprocessing:** The text follows the same normalization and feature pipeline used during training.
+3. **Inference:** The saved Logistic Regression classifier predicts the email category.
+4. **Explanation:** For individual messages, the application derives term contributions from TF-IDF values and model coefficients.
+5. **Output:** Results are displayed in the dashboard or exported through the CLI/CSV workflow.
 
-The project uses the **provided Kaggle-derived labeled email CSV**, with `text` and `spam` columns (`0` = legitimate email / ham; `1` = spam).
+## 🧠 Model Development & Evaluation
 
-| Dataset stage | Emails |
+### Dataset and preparation
+
+The project uses the labeled email dataset included as [`emails.csv`](emails.csv), with `spam = 1` representing spam and `spam = 0` representing legitimate messages.
+
+| Data preparation stage | Records |
 |---|---:|
-| Original labeled records | 5,728 |
-| Exact duplicate texts removed | 33 |
-| Usable, unique records | **5,695** |
+| Original labeled messages | 5,728 |
+| Exact duplicates removed | 33 |
+| Cleaned dataset | **5,695** |
 | Training partition (80%) | 4,556 |
 | Held-out test partition (20%) | 1,139 |
 
-The train/test split is stratified by label with **random seed 42**. Text preprocessing uses lowercase alphanumeric tokenization, English stopword removal, and Porter stemming. TF-IDF uses unigrams and bigrams, capped at 5,000 features. The same fitted pipeline is used at inference time, preventing preprocessing mismatches between training and prediction.
+The training workflow uses a **stratified 80/20 split with random seed 42** and a TF-IDF representation with unigrams and bigrams. Feature fitting and model selection are performed without using the held-out test partition.
 
-> A stratified random split is appropriate for this **static email classification experiment**. It is **not** a time-series validation method and does not measure performance on future email distributions.
+### Cross-validation comparison
 
-## 🧪 Model Training & Selection
+The three candidate algorithms were evaluated on the training partition using three-fold stratified cross-validation. **Mean spam F1-score** determined which classifier was selected.
 
-Three models are compared with the same training folds and preprocessing approach. **Mean F1 on the positive (spam) class** is the selection metric. The final test set is not used to choose the winner.
-
-### Training-only cross-validation
-
-| Model | Mean spam F1 | CV standard deviation |
+| Classifier | Mean CV spam F1 | Standard deviation |
 |---|---:|---:|
 | Multinomial Naive Bayes | 0.9606 | 0.0081 |
 | Bernoulli Naive Bayes | 0.8553 | 0.0217 |
 | **Logistic Regression** | **0.9748** | **0.0033** |
 
-**Selected model:** Class-balanced Logistic Regression, based on training-only cross-validation rather than the holdout result.
+**Selected model:** Logistic Regression, refitted on the full training partition after model selection.
 
-## 📊 Evaluation Results
+## 📊 Experimental Results
 
-The following values come from the **locally reproduced run on November 1, 2026, using Python 3.11**. The underlying machine-readable values are in [`artifacts/reports/metrics.json`](artifacts/reports/metrics.json).
+The results below were reproduced using the saved training workflow on **November 1, 2026**, with **1,139 held-out email messages**.
 
-<details>
-<summary>Evaluation setup</summary>
-
-- Dataset: 5,695 unique records after exact-text deduplication
-- Split: stratified 80/20 with seed 42
-- Cross-validation: 3 stratified folds on training records only
-- Model selection: mean positive-class F1 across training folds
-- Evaluation: selected model assessed once on 1,139 held-out emails
-
-</details>
-
-### Held-out test metrics
-
-| Metric | Result |
+| Evaluation metric | Result |
 |---|---:|
 | **Accuracy** | **99.03%** |
-| **Precision (spam)** | **96.47%** |
-| **Recall (spam)** | **99.64%** |
-| **F1-score (spam)** | **98.03%** |
-| Average Precision (PR-AUC summary) | 0.99826 |
+| **Spam precision** | **96.47%** |
+| **Spam recall** | **99.64%** |
+| **Spam F1-score** | **98.03%** |
+| Average precision | 0.99826 |
 | ROC-AUC | 0.99946 |
 
-### Confusion matrix
+### Classification breakdown
 
-| Actual ↓ / Predicted → | Not Spam | Spam |
+| Actual / Predicted | Not Spam | Spam |
 |---|---:|---:|
-| **Not Spam (ham)** | **855** true negatives | **10** false positives |
+| **Not Spam** | **855** true negatives | **10** false positives |
 | **Spam** | **1** false negative | **273** true positives |
 
-![Holdout confusion matrix](artifacts/reports/confusion_matrix.png)
+The classifier correctly identified **1,128 of 1,139** held-out messages. The evaluation generated a confusion matrix, precision–recall curve, ROC curve, and **11 misclassification records** for further inspection.
 
-*Generate the plots using the training command in your environment before publishing. The table above records the verified 855/10/1/273 local run.*
+Detailed results are available in [`metrics.json`](artifacts/reports/metrics.json), the [Experiment Findings](artifacts/reports/EXPERIMENT_FINDINGS.md), and the [Model Card](artifacts/model_card.md).
 
-The model missed **1 of 274** spam messages but incorrectly flagged **10 of 865** legitimate emails. Those false positives matter in an email-filtering setting because legitimate messages could be incorrectly blocked or hidden.
+## 🖥️ Application Walkthrough
 
-### Additional diagnostic plots
+The screenshots below were captured from the running **MailScope Streamlit application**. They follow the product workflow from the main interface through individual inference, evaluation, batch processing, and model inspection.
 
-| Precision–recall curve | ROC curve |
+### 01 — MailScope Interface
+
+The application's main workspace introduces the classification and evaluation tools and provides navigation between its four functional sections.
+
+![MailScope main interface](screenshots/01-dashboard-overview.png)
+
+### 02 — Live Spam Prediction
+
+An incoming message is analyzed by the saved ML pipeline, producing a **Spam detected** result with the corresponding model score.
+
+![Live email classification result](screenshots/02-spam-prediction.png)
+
+### 03 — Prediction Explanation
+
+The decision-inspection table highlights influential words and phrases, showing their direction and contribution to the classification.
+
+![Email classification feature contributions](screenshots/03-feature-explanation.png)
+
+### 04 — Model Performance Metrics
+
+The held-out evaluation displays accuracy, precision, recall, and F1-score calculated from the model's predictions against the test dataset.
+
+![Held-out model evaluation metrics](screenshots/04-evaluation-metrics.png)
+
+### 05 — Confusion Matrix & Error Breakdown
+
+A visual confusion matrix and companion result cards show correct classifications and false-positive/false-negative counts.
+
+![Confusion matrix and error breakdown](screenshots/05-confusion-matrix.png)
+
+### 06 — Precision–Recall & ROC Curves
+
+Evaluation curves summarize the classifier's behavior across decision thresholds and complement the headline performance metrics.
+
+![Precision recall and ROC classification curves](screenshots/06-classification-curves.png)
+
+### 07 — Cross-Validated Model Comparison
+
+The model comparison section visualizes the training-only cross-validation results for all three candidate classifiers and identifies the selected model.
+
+![Cross-validation model comparison](screenshots/07-model-comparison.png)
+
+### 08 — Batch Classification Workspace
+
+The batch workspace accepts CSV uploads containing a `text` column and previews the messages before inference.
+
+![Batch classification CSV upload interface](screenshots/08-batch-classification-interface.png)
+
+### 09 — Batch Prediction Results
+
+After processing the uploaded CSV, MailScope displays class counts, individual predictions, model scores, and a downloadable results file.
+
+![Batch email classification results](screenshots/09-batch-classification-results.png)
+
+### 10 — Model Insights & Feature Weights
+
+The model-insights view presents spam-associated and legitimate-associated terms together with the evaluation workflow used to produce the trained classifier.
+
+![Model feature insights and evaluation workflow](screenshots/10-model-insights.png)
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
 |---|---|
-| ![Precision–recall curve](artifacts/reports/precision_recall_curve.png) | ![ROC curve](artifacts/reports/roc_curve.png) |
+| **Python** | Training, prediction, evaluation, and application logic |
+| **scikit-learn** | TF-IDF pipelines, model training, cross-validation, and evaluation |
+| **NLTK** | NLP preprocessing and Porter stemming |
+| **Pandas / NumPy** | Dataset validation, transformation, and batch processing |
+| **Streamlit** | Interactive classification and evaluation dashboard |
+| **Matplotlib** | Confusion matrix and performance visualizations |
+| **Joblib** | Persisting and reloading the trained prediction pipeline |
+| **Pytest / GitHub Actions** | Automated testing and continuous integration |
 
-Supporting outputs: [CV comparison CSV](artifacts/reports/cv_model_comparison.csv) · [Misclassification index](artifacts/reports/holdout_errors.csv) · [Top model features](artifacts/reports/top_features.csv) · [Experiment Findings](artifacts/reports/EXPERIMENT_FINDINGS.md) · [Model Card](artifacts/model_card.md).
+## 🚀 Running MailScope
 
-> **Important:** These results are limited to the supplied labeled dataset. The raw spam probabilities are **uncalibrated**; a high AUC or F1 does not establish reliability on a new mailbox, a newer corpus, or adversarial/phishing emails.
+### 1. Set up the environment
 
-## 🔎 Error Analysis & Interpretation
-
-The project records misclassified **row identifiers, actual labels, predicted labels, and model scores** without automatically exporting entire email bodies. A local inspection command lets a developer review individual mistakes.
-
-The evaluation raises useful questions:
-
-- **False positives:** Why did 10 legitimate emails look like spam? Some legitimate messages may share promotional language or formatting with the spam class; determining the actual causes requires inspecting those cases locally.
-- **False negatives:** What allowed one spam message through? It is important to inspect that message before making conclusions about the failure mode.
-- **Threshold trade-off:** Lowering the decision threshold may improve spam recall but usually creates additional false positives. Threshold tuning must use separate validation data, not the final holdout set.
-- **Possible generalization limits:** The dataset is static and may contain dataset-specific word patterns. There is no external or chronological evaluation proving generalization to future mail.
-
-The [Experiment Findings](artifacts/reports/EXPERIMENT_FINDINGS.md) document separates observed results from hypotheses and proposed further experiments.
-
-## ⚙️ Run the Project
-
-### Requirements
-
-- Python **3.11** recommended
-- Windows, Linux, or macOS
-- Dependencies in [`requirements.txt`](requirements.txt); `requirements-dev.txt` adds Pytest
-
-### 1. Install and test
-
-From the repository's root folder on Windows (PowerShell **or** Command Prompt):
+Python **3.11** is recommended. From the repository root, run these commands in Windows PowerShell:
 
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip install -r requirements-ui.txt
 ```
 
-**Expected test output:** `10 passed`.
+### 2. Launch the interactive dashboard
 
-### 2. Train and reproduce the experiment
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run dashboard.py
+```
+
+Open the local URL printed in the terminal, normally **http://localhost:8501**. The saved trained pipeline is included in `artifacts/`, so the dashboard can be used without retraining.
+
+### 3. Train the model and regenerate reports
 
 ```powershell
 .\.venv\Scripts\python.exe -m spam_classifier.train --data emails.csv --out artifacts
 ```
 
-This creates or refreshes the complete model and reports under `artifacts/`, including the confusion matrix, CV comparison, metrics, error index, and model card. **Results may vary slightly across dependency versions; use your own generated `metrics.json` as the source of truth.** The narrative findings document and README are not automatically rewritten when training is rerun.
+This regenerates the fitted pipeline and evaluation assets, including metrics, model comparisons, plots, and error-analysis records.
 
-### 3. Predict spam
+### 4. Run CLI predictions
 
 ```powershell
-# One email
+# Single message
 .\.venv\Scripts\python.exe app.py --text "Claim your free cash prize now"
 
-# JSON response
+# JSON result
 .\.venv\Scripts\python.exe app.py --text "Meeting moved to Thursday" --json
-
-# Interactive input
-.\.venv\Scripts\python.exe app.py
 ```
 
-Prediction includes a spam/not-spam label. The reported spam probability is **not calibrated**.
+For batch classification, use the dashboard's **Batch workspace** and the included [`demo_messages.csv`](demo_messages.csv).
 
-### 4. Run the interactive web dashboard
-
-Install the optional frontend dependency (the base CLI and training pipeline do **not** require Streamlit):
+### 5. Run automated tests
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-ui.txt
-.\.venv\Scripts\python.exe -m streamlit run dashboard.py
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Open the **local URL** displayed in your terminal, usually `http://localhost:8501`.
+The expanded project test suite includes **17 automated tests**, covering the prediction pipeline, data handling, leakage-related checks, dashboard helpers, and held-out evaluation behavior.
 
-The dashboard has four working views:
-
-| View | Demonstrates |
-|---|---|
-| **Try a Message** | Text prediction, uncalibrated spam score, and recognized feature contributions |
-| **Evaluation** | Live reading of saved holdout metrics, confusion matrix, CV model comparison, and evaluation curves |
-| **Batch Classification** | Upload a CSV with a `text` column (1–500 rows), run inference, and download predictions; `demo_messages.csv` supplies fictional sample data |
-| **Model Insights** | Top weighted text features, training protocol, and documented limits |
-
-For a quick batch demonstration, upload [`demo_messages.csv`](demo_messages.csv).
-
-**For portfolio screenshots**, use the [Screenshot Guide](SCREENSHOT_GUIDE.md). Screenshots should be taken from your actual running dashboard; no sample or fabricated result images are included. The dashboard reads your local `artifacts/reports/metrics.json`, so retrain first if you want to display your most recent verified results.
-
-### 5. Investigate errors locally
-
-```powershell
-.\.venv\Scripts\python.exe -m spam_classifier.inspect_errors --kind false_positive --limit 3
-.\.venv\Scripts\python.exe -m spam_classifier.inspect_errors --kind false_negative --limit 3
-```
-
-These commands may display message snippets in your local terminal; review them privately and do not publish sensitive contents.
-
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```text
 email-spam-classifier/
-├── README.md
-├── emails.csv                         # Original labeled dataset
-├── app.py                             # Interactive / text / JSON CLI
-├── dashboard.py                       # Streamlit prediction + metrics + batch UI
-├── requirements-ui.txt                # Optional Streamlit dependency
-├── SCREENSHOT_GUIDE.md                # Guide to genuine app screenshots
-├── demo_messages.csv                 # Fictional messages for batch demo
-├── legacy_app.py                      # Preserved original CLI source
-├── email-spam-detection.ipynb         # Historical notebook (leakage warning)
-├── model.pkl, vectorizer.pkl          # Original model assets
+├── dashboard.py                    # MailScope Streamlit application
+├── app.py                          # CLI and JSON predictions
+├── emails.csv                      # Labeled email dataset
+├── demo_messages.csv              # Sample batch messages
+├── spam_classifier/
+│   ├── data.py                     # Data cleaning and validation
+│   ├── text.py                     # NLP preprocessing
+│   ├── models.py                   # Classifier pipelines
+│   ├── train.py                    # Training and evaluation
+│   ├── dashboard_utils.py          # Dashboard prediction helpers
+│   └── inspect_errors.py           # Misclassification inspection
+├── artifacts/
+│   ├── spam_pipeline.joblib        # Saved trained pipeline
+│   ├── model_card.md
+│   └── reports/                   # Metrics, curves, and diagnostics
+├── tests/                         # Automated unit/integration checks
+├── screenshots/                   # 10 application screenshots
+├── notebooks/                     # Reproducible experiment walkthrough
+├── .streamlit/config.toml         # Dashboard theme
+├── .github/workflows/tests.yml    # CI workflow
 ├── requirements.txt
 ├── requirements-dev.txt
-├── spam_classifier/
-│   ├── data.py                        # Dataset validation and deduplication
-│   ├── text.py                        # Tokenization, stopwords, stemming
-│   ├── models.py                      # TF-IDF + classifier pipelines
-│   ├── train.py                       # CV, training, evaluation, artifacts
-│   ├── dashboard_utils.py             # Tested prediction/batch/explanation helpers
-│   └── inspect_errors.py              # Local-only error review
-├── notebooks/
-│   └── leakage_safe_walkthrough.ipynb
-├── tests/
-│   ├── test_pipeline.py
-│   └── test_dashboard_utils.py
-├── artifacts/
-│   ├── spam_pipeline.joblib           # Saved fitted pipeline
-│   ├── model_card.md
-│   └── reports/                      # Evaluation results + plots
-└── .github/workflows/tests.yml        # CI test workflow
+├── requirements-ui.txt
+└── README.md
 ```
 
-## 🧰 Technology Stack
+## 👨‍💻 Author
 
-| Technology | Role |
-|---|---|
-| Python | Core application, training and prediction code |
-| scikit-learn | Pipelines, TF-IDF, model fitting, CV and evaluation |
-| NLTK | Porter stemming |
-| Pandas / NumPy | Dataset preparation and numerical processing |
-| Matplotlib | Confusion matrix and evaluation curves |
-| Streamlit | Local browser-based prediction and experiment dashboard |
-| Joblib | Saving and loading the complete fitted pipeline |
-| Pytest | Regression and leakage-related checks |
-| GitHub Actions | Run tests on pushes and pull requests |
+**Muhammad Abbas**
 
-## ✅ Verification & Reproducibility
+Software Engineer · Machine Learning & AI
 
-The expanded automated suite contains **16 passing tests** (10 original + 6 dashboard-focused), covering text/data validation, model pipeline behavior, saved-model inference, and an explicit check that a token appearing only in a held-out record is **not fitted into the training vocabulary**.
-
-Run `python -m pytest -q` after modifying preprocessing or training code. Test completion does not automatically mean the statistical methodology is flawless; the train/validation/test protocol and independent evaluation remain essential.
-
-The repository records the random seed, split sizes, training-only CV comparisons, held-out metrics, confusion matrix, library versions, and fitted pipeline. The saved `.joblib` model is intended for this trusted repository only; never deserialize untrusted pickle/joblib files.
-
-## ⚠️ Scope & Limitations
-
-- Classifies the **text** of one message; does not inspect attachments, sender reputation, URLs, or message headers.
-- Does not connect to an actual Gmail/Outlook inbox or automatically block mail.
-- Does **not** detect phishing or guarantee security outcomes.
-- No temporal holdout, external validation corpus, probability calibration, or production drift monitoring.
-- Exact duplicates are removed; semantic near-duplicates or templated messages may still require separate scrutiny.
-- The legacy notebook is preserved for reference; its earlier TF-IDF-before-split evaluation should not be used to support current model claims.
-
-## 🔮 Potential Next Improvements
-
-Calibrated probability estimates, validation-only threshold selection, testing on a newer external dataset, and simple model-drift monitoring would be appropriate if the project were expanded beyond this portfolio experiment. These are **not claimed as implemented**.
-
-## 👤 Maintainer
-
-**Muhammad Abbas** — Software Engineer | Machine Learning & AI
-
-[GitHub Profile](https://github.com/MdAbbas762)
+[![GitHub Profile](https://img.shields.io/badge/GitHub-View%20Profile-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MdAbbas762)
+[![Email Contact](https://img.shields.io/badge/Email-Contact%20Me-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:abbas63891@gmail.com)
