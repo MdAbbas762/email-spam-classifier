@@ -1,0 +1,12 @@
+cleaned_row_index,actual_label,predicted_label,predicted_spam_probability,error_type
+2507,0,1,0.57774,false_positive
+4264,0,1,0.559782,false_positive
+4914,0,1,0.511208,false_positive
+3720,0,1,0.696823,false_positive
+2837,0,1,0.818736,false_positive
+2396,0,1,0.546188,false_positive
+115,1,0,0.444328,false_negative
+3067,0,1,0.710849,false_positive
+4184,0,1,0.547586,false_positive
+2697,0,1,0.757758,false_positive
+2863,0,1,0.63918,false_positive

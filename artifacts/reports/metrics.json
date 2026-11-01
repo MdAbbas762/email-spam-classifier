@@ -1,0 +1,103 @@
+{
+  "experiment": "TF-IDF + classification (stratified train-only CV)",
+  "run_at_utc": "2026-11-01T12:45:39.004194+00:00",
+  "dataset": {
+    "source_rows": 5728,
+    "removed_missing": 0,
+    "removed_duplicate_texts": 33,
+    "remaining_rows": 5695,
+    "ham": 4327,
+    "spam": 1368
+  },
+  "split": {
+    "seed": 42,
+    "test_size": 0.2,
+    "cv_folds": 3,
+    "train_size": 4556,
+    "test_size_rows": 1139,
+    "train_spam": 1094,
+    "test_spam": 274
+  },
+  "selection_metric": "mean train-fold cross-validation F1 (spam class)",
+  "selected_model": "logistic_regression",
+  "cv_comparison": [
+    {
+      "model": "multinomial_nb",
+      "cv_accuracy_mean": 0.9813421734880361,
+      "cv_accuracy_std": 0.0038203946873952613,
+      "cv_precision_mean": 0.9745942097948578,
+      "cv_precision_std": 0.00800339940029773,
+      "cv_recall_mean": 0.9469742586180944,
+      "cv_recall_std": 0.009104894364236197,
+      "cv_f1_mean": 0.9605776354469563,
+      "cv_f1_std": 0.00812603844565437,
+      "cv_average_precision_mean": 0.9948044716679932,
+      "cv_average_precision_std": 0.0020580451169806787
+    },
+    {
+      "model": "bernoulli_nb",
+      "cv_accuracy_mean": 0.9185669847861794,
+      "cv_accuracy_std": 0.013846179260318774,
+      "cv_precision_mean": 0.7487831567444169,
+      "cv_precision_std": 0.03290604999335135,
+      "cv_recall_mean": 0.9981684981684982,
+      "cv_recall_std": 0.002590134729621044,
+      "cv_f1_mean": 0.8552951614694777,
+      "cv_f1_std": 0.02166917328296246,
+      "cv_average_precision_mean": 0.9902863132712852,
+      "cv_average_precision_std": 0.005279208456480164
+    },
+    {
+      "model": "logistic_regression",
+      "cv_accuracy_mean": 0.9877080331899006,
+      "cv_accuracy_std": 0.0016464087183904498,
+      "cv_precision_mean": 0.9585104627173594,
+      "cv_precision_std": 0.006018349063515616,
+      "cv_recall_mean": 0.9917732951979529,
+      "cv_recall_std": 0.0022370022589369106,
+      "cv_f1_mean": 0.9748474802948328,
+      "cv_f1_std": 0.0033207069566590515,
+      "cv_average_precision_mean": 0.9975998450650184,
+      "cv_average_precision_std": 0.0010776428010562714
+    }
+  ],
+  "training_metrics": {
+    "accuracy": 0.9931957857769974,
+    "precision": 0.9732858414959928,
+    "recall": 0.9990859232175503,
+    "f1": 0.9860171402796571,
+    "average_precision": 0.9998142379131718,
+    "roc_auc": 0.9999416490557709
+  },
+  "holdout_metrics": {
+    "accuracy": 0.990342405618964,
+    "precision": 0.9646643109540636,
+    "recall": 0.9963503649635036,
+    "f1": 0.9802513464991023,
+    "average_precision": 0.9982577905054748,
+    "roc_auc": 0.9994641576304797
+  },
+  "holdout_confusion_matrix": [
+    [
+      855,
+      10
+    ],
+    [
+      1,
+      273
+    ]
+  ],
+  "holdout_false_positives": 10,
+  "holdout_false_negatives": 1,
+  "software": {
+    "python": "3.11.9",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.3.3"
+  },
+  "notes": [
+    "TF-IDF is fitted only within training folds and final training split.",
+    "Test set is never used to tune hyperparameters or select a model.",
+    "Random stratification is appropriate for this static email snapshot; no claim about temporal generalization or real inbox deployment.",
+    "Predicted probabilities are uncalibrated; do not treat as confidence guarantees."
+  ]
+}
