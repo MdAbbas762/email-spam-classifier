@@ -1,50 +1,46 @@
-import pickle
-from nltk.corpus import stopwords
-import nltk
-# nltk.download('punkt_tab')
-from nltk.stem.porter import PorterStemmer
-# nltk.download('stopwords')
-import string
+"""Email spam classifier CLI — the original one-message interaction still works.
 
-ps = PorterStemmer()
+python app.py                     # interactive, as in the original project
+python app.py --text "Subject: Free prize"  # one-off prediction
+python app.py --text "hello" --json        # structured result
+"""
+import argparse
+import json
+from pathlib import Path
+import joblib
 
-def transform_text(text):
-    text = text.lower()
-    text = nltk.word_tokenize(text)
+def predict(text: str, model_path='artifacts/spam_pipeline.joblib') -> dict:
+    path=Path(model_path)
+    if not path.exists():
+        raise FileNotFoundError(
+            f'New trained model not found at {path}. '
+            'Run: python -m spam_classifier.train --data emails.csv --out artifacts')
+    # joblib/pickle deserialization is only safe for trusted models.
+    pipeline=joblib.load(path)
+    pred=int(pipeline.predict([text])[0])
+    prob=float(pipeline.predict_proba([text])[0,1])
+    return {'label':'Spam' if pred==1 else 'Not Spam',
+            'predicted_spam_probability':round(prob,4)}
 
-    y = []
-    for i in text:
-        if i.isalnum():
-            y.append(i)
+def main():
+    parser=argparse.ArgumentParser(description='Classify an email as Spam or Not Spam')
+    parser.add_argument('--text',help='Email content to classify; prompts if omitted')
+    parser.add_argument('--model',default='artifacts/spam_pipeline.joblib')
+    parser.add_argument('--json',action='store_true',help='Print machine-readable JSON')
+    args=parser.parse_args()
+    message=args.text if args.text is not None else input('Enter the email: ')
+    if not message.strip():
+        parser.error('Email text must not be empty')
+    try:
+        result=predict(message,args.model)
+    except (FileNotFoundError,ValueError) as exc:
+        parser.exit(2,f'Error: {exc}\n')
+    if args.json:
+        print(json.dumps(result))
+    else:
+        print(result['label'])
+        print(f'Estimated spam probability: {result["predicted_spam_probability"]:.1%} '
+              '(uncalibrated)')
 
-    text = y[:]
-    y.clear()
-
-    for i in text:
-        if i not in stopwords.words('english') and i not in string.punctuation:
-            y.append(i)
-
-    text = y[:]
-    y.clear()
-
-    for i in text:
-        y.append(ps.stem(i))
-
-    return " ".join(y)
-
-tfidf = pickle.load(open('vectorizer.pkl','rb'))
-model = pickle.load(open('model.pkl','rb'))
-
-input_email = input("Enter the email ")
-
-    # 1. preprocess
-transformed_email = transform_text(input_email)
-    # 2. vectorize
-vector_input = tfidf.transform([transformed_email])
-    # 3. predict
-result = model.predict(vector_input)[0]
-    # 4. Display
-if result == 1:
-    print("Spam")
-else:
-    print("Not Spam")
+if __name__=='__main__':
+    main()
